@@ -1,0 +1,131 @@
+---
+
+# (c) Wong Hoi Sing Edison <hswong3i@pantarei-design.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- hosts: all
+  remote_user: root
+  become: true
+  roles:
+    - role: bootstrap
+    - role: ntp
+    - role: ceph-common
+
+  post_tasks:
+    - name: ceph --version
+      command: ceph --version
+      register: result
+      changed_when: result is not succeeded
+
+    - name: ceph-fuse --version
+      command: ceph-fuse --version
+      register: result
+      changed_when: result is not succeeded
+
+    - name: rbd-fuse --version
+      command: rbd-fuse --version
+      register: result
+      changed_when: result is not succeeded
+
+- hosts: ceph-mon
+  remote_user: root
+  become: true
+  roles:
+    - role: ceph-mon
+      ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+      ceph_mon_host: >-
+        {%- for host in ansible_play_hosts -%}
+        {{ hostvars[host]['ansible_enp0s8']['ipv4']['address'] }},
+        {%- endfor -%}
+      ceph_public_network: "{{ (ansible_enp0s8.ipv4.network + '/' + ansible_enp0s8.ipv4.netmask) | ipaddr('net') }}"
+      ceph_cluster_network: "{{ ceph_public_network }}"
+
+  post_tasks:
+    - name: start services
+      service:
+        name: "ceph-mon@{{ ansible_hostname }}"
+        state: started
+      changed_when: false
+      ignore_errors: true
+
+    - name: ceph --status
+      command: ceph --status
+      register: result
+      changed_when: result is not succeeded
+
+- hosts: ceph-mgr
+  remote_user: root
+  become: true
+  roles:
+    - role: ceph-mgr
+      ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+
+  post_tasks:
+    - name: start services
+      service:
+        name: "ceph-mgr@{{ ansible_hostname }}"
+        state: started
+      changed_when: false
+      ignore_errors: true
+
+    - name: ceph --status
+      command: ceph --status
+      register: result
+      changed_when: result is not succeeded
+
+- hosts: ceph-osd
+  remote_user: root
+  become: true
+  roles:
+    - role: ceph-osd
+      ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+      ceph_volume:
+        - { objectstore: "bluestore", data: "/dev/sdc" }
+
+  post_tasks:
+    - name: ceph-volume lvm activate
+      shell: |
+        set -o pipefail
+        ceph-volume lvm activate --all
+      args:
+        executable: "/bin/bash"
+      changed_when: false
+      ignore_errors: true
+
+    - name: ceph --status
+      command: ceph --status
+      register: result
+      changed_when: result is not succeeded
+
+- hosts: ceph-mds
+  remote_user: root
+  become: true
+  roles:
+    - role: ceph-mds
+      ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+      ceph_cephfs_data_pool: { pg_num: "128", pgp_num: "128", size: "3", min_size: "3" }
+      ceph_cephfs_metadata_pool: { pg_num: "32", pgp_num: "32", size: "3", min_size: "3" }
+
+  post_tasks:
+    - name: start services
+      service:
+        name: "ceph-mds@{{ ansible_hostname }}"
+        state: started
+      changed_when: false
+      ignore_errors: true
+
+    - name: ceph --status
+      command: ceph --status
+      register: result
+      changed_when: result is not succeeded

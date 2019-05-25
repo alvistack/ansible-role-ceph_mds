@@ -1,0 +1,182 @@
+---
+
+# (c) Wong Hoi Sing Edison <hswong3i@pantarei-design.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- name: include release specific variables
+  include_vars: "{{ loop_var }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+        - "main.yml"
+      paths: "../vars"
+  loop_control:
+    loop_var: "loop_var"
+  ignore_errors: true
+  tags: ceph_mds
+
+- name: include release specific tasks
+  include_tasks: "{{ loop_var }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      paths: "."
+  loop_control:
+    loop_var: "loop_var"
+  ignore_errors: true
+  tags: ceph_mds
+
+- name: prepare directories
+  file:
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0755') }}"
+    state: "{{ item.state | default('directory') }}"
+  with_items:
+    - { dest: "/etc/ceph" }
+    - { dest: "/lib/systemd/system" }
+    - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}", owner: "ceph", group: "ceph" }
+  tags: ceph_mds
+
+- name: copy templates
+  template:
+    src: "./templates{{ item.dest }}.j2"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+  with_items:
+    - { dest: "/lib/systemd/system/ceph-mds@.service" }
+  notify:
+    - ceph_mds | systemctl daemon-reload
+    - ceph_mds | systemctl restart
+  tags: ceph_mds
+
+- name: touch files
+  copy:
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+    content: ""
+    force: false
+  with_items:
+    - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
+  tags: ceph_mds
+
+- name: tweak settings in ini files
+  ini_file:
+    path: "/etc/ceph/ceph.conf"
+    section: "{{ item.section }}"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+  with_items: "{{ ceph_mds_config }}"
+  notify:
+    - ceph_mds | systemctl restart
+  tags: ceph_mds
+
+- name: create manager keyring
+  shell: |
+    set -o pipefail
+    ceph \
+      auth get-or-create mds.{{ ansible_hostname }} \
+      mon 'allow profile mds' \
+      osd 'allow *' \
+      mds 'allow *' \
+      -o /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
+  args:
+    executable: "/bin/bash"
+    creates: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring"
+  register: result
+  changed_when: result is not succeeded
+  notify:
+    - ceph_mds | systemctl restart
+  tags: ceph_mds
+
+- name: prepare files
+  file:
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+    state: "{{ item.state | default('file') }}"
+  with_items:
+    - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
+    - { dest: "/lib/systemd/system/ceph-mds@.service" }
+    - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
+  notify:
+    - ceph_mds | systemctl restart
+  tags: ceph_mds
+
+- name: flush handlers
+  meta: flush_handlers
+  tags: ceph_mds
+
+- name: ceph osd pool create
+  shell: |
+    set -o pipefail
+    ceph osd pool create cephfs_data \
+      {{ ceph_cephfs_data_pool.pg_num | default(8) }} \
+      {{ ceph_cephfs_data_pool.pgp_num | default(8) }}
+    ceph osd pool set cephfs_data \
+      size {{ ceph_cephfs_data_pool.size | default(1) }}
+    ceph osd pool set cephfs_data \
+      min_size {{ ceph_cephfs_data_pool.min_size | default(1) }}
+    ceph osd pool create cephfs_metadata \
+      {{ ceph_cephfs_metadata_pool.pg_num | default(8) }} \
+      {{ ceph_cephfs_metadata_pool.pgp_num | default(8) }}
+    ceph osd pool set cephfs_metadata \
+      size {{ ceph_cephfs_metadata_pool.size | default(1) }}
+    ceph osd pool set cephfs_metadata \
+      min_size {{ ceph_cephfs_metadata_pool.min_size | default(1) }}
+  args:
+    executable: "/bin/bash"
+  when: ansible_hostname == ansible_play_hosts[0]
+  register: result
+  changed_when: result is not succeeded
+  tags: ceph_mds
+
+- name: ceph fs new
+  shell: |
+    set -o pipefail
+    ceph fs new cephfs \
+      cephfs_metadata cephfs_data
+    ceph fs set cephfs \
+      max_mds {{ ansible_play_hosts | length | int }}
+  args:
+    executable: "/bin/bash"
+  when: ansible_hostname == ansible_play_hosts[0]
+  register: result
+  changed_when: result is not succeeded
+  tags: ceph_mds
+
+- name: enable services
+  service:
+    name: "{{ item.name }}"
+    enabled: true
+  with_items:
+    - { name: "ceph-mds.target" }
+    - { name: "ceph-mds@{{ ansible_hostname }}" }
+  changed_when: false
+  ignore_errors: true
+  tags: ceph_mds
