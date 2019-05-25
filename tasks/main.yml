@@ -165,6 +165,8 @@
     ceph fs new cephfs \
       cephfs_metadata cephfs_data
     ceph fs set cephfs \
+      standby_count_wanted 0
+    ceph fs set cephfs \
       max_mds {{ ansible_play_hosts | length | int }}
   args:
     executable: "/bin/bash"
