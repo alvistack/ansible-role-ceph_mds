@@ -151,7 +151,10 @@
       min_size {{ ceph_cephfs_metadata_pool.min_size | default(1) }}
   args:
     executable: "/bin/bash"
-  when: ansible_hostname == ansible_play_hosts[0]
+  when:
+    - ansible_hostname == ansible_play_hosts[0]
+    - ceph_cephfs_data_pool | default(None)
+    - ceph_cephfs_metadata_pool | default(None)
   register: result
   changed_when: result is not succeeded
   tags: ceph_mds
@@ -165,7 +168,10 @@
       max_mds {{ ansible_play_hosts | length | int }}
   args:
     executable: "/bin/bash"
-  when: ansible_hostname == ansible_play_hosts[0]
+  when:
+    - ansible_hostname == ansible_play_hosts[0]
+    - ceph_cephfs_data_pool | default(None)
+    - ceph_cephfs_metadata_pool | default(None)
   register: result
   changed_when: result is not succeeded
   tags: ceph_mds
