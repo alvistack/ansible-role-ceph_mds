@@ -20,7 +20,14 @@
   roles:
     - role: bootstrap
     - role: ntp
+
+- hosts: ceph-mon
+  remote_user: root
+  become: true
+  roles:
     - role: ceph-common
+      ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+    - role: ceph-mon
 
   post_tasks:
     - name: ceph --version
@@ -38,14 +45,6 @@
       register: result
       changed_when: result is not succeeded
 
-- hosts: ceph-mon
-  remote_user: root
-  become: true
-  roles:
-    - role: ceph-mon
-      ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
-
-  post_tasks:
     - name: start services
       service:
         name: "ceph-mon@{{ ansible_hostname }}"
@@ -62,8 +61,9 @@
   remote_user: root
   become: true
   roles:
-    - role: ceph-mgr
+    - role: ceph-common
       ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+    - role: ceph-mgr
 
   post_tasks:
     - name: start services
@@ -82,8 +82,9 @@
   remote_user: root
   become: true
   roles:
-    - role: ceph-osd
+    - role: ceph-common
       ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+    - role: ceph-osd
 
   post_tasks:
     - name: ceph-volume lvm create
@@ -115,8 +116,9 @@
   remote_user: root
   become: true
   roles:
-    - role: ceph-mds
+    - role: ceph-common
       ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
+    - role: ceph-mds
 
   post_tasks:
     - name: start services
@@ -134,6 +136,7 @@
         ceph osd pool set cephfs_metadata min_size 3
       args:
         executable: "/bin/bash"
+      when: ansible_hostname == ansible_play_hosts[0]
       changed_when: false
       ignore_errors: true
 
@@ -145,6 +148,7 @@
         ceph osd pool set cephfs_data min_size 3
       args:
         executable: "/bin/bash"
+      when: ansible_hostname == ansible_play_hosts[0]
       changed_when: false
       ignore_errors: true
 
@@ -156,6 +160,7 @@
         ceph fs set cephfs max_mds 3
       args:
         executable: "/bin/bash"
+      when: ansible_hostname == ansible_play_hosts[0]
       changed_when: false
       ignore_errors: true
 
