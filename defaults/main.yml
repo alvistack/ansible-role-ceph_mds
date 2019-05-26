@@ -20,10 +20,6 @@ ceph_version: "nautilus"
 # Ceph fsid.
 ceph_fsid: "{{ ansible_play_hosts[0] | to_uuid }}"
 
-# Ceph osd pool for cephfs.
-ceph_cephfs_data_pool: {}
-ceph_cephfs_metadata_pool: {}
-
 # Ceph mds configs.
 ceph_mds_config:
   - { section: "mds", option: "mds cache memory limit", value: "1073741824" }
