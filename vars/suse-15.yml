@@ -16,5 +16,4 @@
 
 _zypper: [
   { state: "latest", name: "ceph-mds" },
-  { state: "latest", name: "cephfs-shell" },
 ]
