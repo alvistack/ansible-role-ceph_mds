@@ -104,7 +104,7 @@
       mon 'allow profile mds' \
       osd 'allow *' \
       mds 'allow *' \
-      -o /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
+      --out-file /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
   args:
     executable: "/bin/bash"
     creates: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring"
