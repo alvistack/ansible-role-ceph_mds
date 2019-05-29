@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Ceph version.
-ceph_version: "nautilus"
+ceph_release: "nautilus"
 
 # Ceph mds configs.
 ceph_mds_config:
