@@ -136,39 +136,6 @@
   meta: flush_handlers
   tags: ceph_mds
 
-- name: ceph osd pool create cephfs_metadata
-  shell: |
-    set -o pipefail
-    ceph osd pool create cephfs_metadata
-  args:
-    executable: "/bin/bash"
-  when: ansible_hostname == ansible_play_hosts[0]
-  changed_when: false
-  ignore_errors: true
-  tags: ceph_mds
-
-- name: ceph osd pool create cephfs_data
-  shell: |
-    set -o pipefail
-    ceph osd pool create cephfs_data
-  args:
-    executable: "/bin/bash"
-  when: ansible_hostname == ansible_play_hosts[0]
-  changed_when: false
-  ignore_errors: true
-  tags: ceph_mds
-
-- name: ceph fs new cephfs
-  shell: |
-    set -o pipefail
-    ceph fs new cephfs cephfs_metadata cephfs_data
-  args:
-    executable: "/bin/bash"
-  when: ansible_hostname == ansible_play_hosts[0]
-  changed_when: false
-  ignore_errors: true
-  tags: ceph_mds
-
 - name: enable services
   service:
     name: "{{ item.name }}"

@@ -133,10 +133,19 @@
     - role: ceph-common
       ceph_fsid: "{{ groups['ceph-mon'][0] | to_uuid }}"
     - role: ceph-osd
-      ceph_volume:
-        - { action: "create", objectstore: "bluestore", data: "/dev/sdc" }
 
   post_tasks:
+    - name: ceph-volume lvm create
+      shell: |
+        set -o pipefail
+        ceph-volume lvm create \
+          --bluestore \
+          --data /dev/sdc
+      args:
+        executable: "/bin/bash"
+      changed_when: false
+      ignore_errors: true
+
     - name: ceph-volume lvm activate
       shell: |
         set -o pipefail
@@ -188,6 +197,42 @@
       service:
         name: "ceph-mds@{{ ansible_hostname }}"
         state: started
+      changed_when: false
+      ignore_errors: true
+
+    - name: ceph osd pool create cephfs_metadata
+      shell: |
+        set -o pipefail
+        ceph osd pool create cephfs_metadata 32 32
+        ceph osd pool set cephfs_metadata size 3
+        ceph osd pool set cephfs_metadata min_size 3
+      args:
+        executable: "/bin/bash"
+      when: ansible_hostname == ansible_play_hosts[0]
+      changed_when: false
+      ignore_errors: true
+
+    - name: ceph osd pool create cephfs_data
+      shell: |
+        set -o pipefail
+        ceph osd pool create cephfs_data 128 128
+        ceph osd pool set cephfs_data size 3
+        ceph osd pool set cephfs_data min_size 3
+      args:
+        executable: "/bin/bash"
+      when: ansible_hostname == ansible_play_hosts[0]
+      changed_when: false
+      ignore_errors: true
+
+    - name: ceph fs new cephfs
+      shell: |
+        set -o pipefail
+        ceph fs new cephfs cephfs_metadata cephfs_data
+        ceph fs set cephfs standby_count_wanted 0
+        ceph fs set cephfs max_mds 3
+      args:
+        executable: "/bin/bash"
+      when: ansible_hostname == ansible_play_hosts[0]
       changed_when: false
       ignore_errors: true
 
