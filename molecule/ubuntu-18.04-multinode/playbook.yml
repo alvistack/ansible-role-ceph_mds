@@ -214,7 +214,7 @@
         set -o pipefail
         ceph osd pool create cephfs_metadata 32 32
         ceph osd pool set cephfs_metadata size 3
-        ceph osd pool set cephfs_metadata min_size 3
+        ceph osd pool set cephfs_metadata min_size 2
       args:
         executable: "/bin/bash"
       when: ansible_hostname == ansible_play_hosts[0]
@@ -226,7 +226,7 @@
         set -o pipefail
         ceph osd pool create cephfs_data 128 128
         ceph osd pool set cephfs_data size 3
-        ceph osd pool set cephfs_data min_size 3
+        ceph osd pool set cephfs_data min_size 2
       args:
         executable: "/bin/bash"
       when: ansible_hostname == ansible_play_hosts[0]
@@ -238,7 +238,7 @@
         set -o pipefail
         ceph fs new cephfs cephfs_metadata cephfs_data
         ceph fs set cephfs standby_count_wanted 0
-        ceph fs set cephfs max_mds 3
+        ceph fs set cephfs max_mds 1
       args:
         executable: "/bin/bash"
       when: ansible_hostname == ansible_play_hosts[0]
