@@ -19,32 +19,32 @@
   tags: ceph_mds
 
 - name: include release specific variables
-  include_vars: "{{ loop_var }}"
-  with_first_found:
-    - files:
+  include_vars: "{{ lookup('first_found', _params) }}"
+  vars:
+    _params:
+      files:
         - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
         - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
         - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
         - "{{ ansible_distribution | lower }}.yml"
         - "{{ ansible_os_family | lower }}.yml"
-      paths: "../vars"
-  loop_control:
-    loop_var: "loop_var"
+      paths:
+        - "../vars"
   ignore_errors: true
   tags: ceph_mds
 
 - name: include release specific tasks
-  include_tasks: "{{ loop_var }}"
-  with_first_found:
-    - files:
+  include_tasks: "{{ lookup('first_found', _params) }}"
+  vars:
+    _params:
+      files:
         - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
         - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
         - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
         - "{{ ansible_distribution | lower }}.yml"
         - "{{ ansible_os_family | lower }}.yml"
-      paths: "."
-  loop_control:
-    loop_var: "loop_var"
+      paths:
+        - "."
   ignore_errors: true
   tags: ceph_mds
 
@@ -55,7 +55,7 @@
     group: "{{ item.group | default('root') }}"
     mode: "{{ item.mode | default('0755') }}"
     state: "{{ item.state | default('directory') }}"
-  with_items:
+  loop:
     - { dest: "/etc/ceph" }
     - { dest: "/lib/systemd/system" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}", owner: "ceph", group: "ceph" }
@@ -68,7 +68,7 @@
     owner: "{{ item.owner | default('root') }}"
     group: "{{ item.group | default('root') }}"
     mode: "{{ item.mode | default('0644') }}"
-  with_items:
+  loop:
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
   notify:
     - ceph_mds | systemctl daemon-reload
@@ -83,7 +83,7 @@
     mode: "{{ item.mode | default('0644') }}"
     content: ""
     force: false
-  with_items:
+  loop:
     - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
   tags: ceph_mds
 
@@ -94,7 +94,7 @@
     option: "{{ item.option | default(None) or omit }}"
     value: "{{ item.value | default(None) or omit }}"
     state: "{{ item.state | default('present') }}"
-  with_items: "{{ ceph_mds_config }}"
+  loop: "{{ ceph_mds_config }}"
   notify:
     - ceph_mds | systemctl restart
   tags: ceph_mds
@@ -124,7 +124,7 @@
     group: "{{ item.group | default('root') }}"
     mode: "{{ item.mode | default('0644') }}"
     state: "{{ item.state | default('file') }}"
-  with_items:
+  loop:
     - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
@@ -140,7 +140,7 @@
   service:
     name: "{{ item.name }}"
     enabled: true
-  with_items:
+  loop:
     - { name: "ceph-mds.target" }
     - { name: "ceph-mds@{{ ansible_hostname }}" }
   changed_when: false
