@@ -17,17 +17,18 @@
 - name: ceph_mds | systemctl daemon-reload
   systemd:
     daemon_reload: true
-  when:
-    - ansible_service_mgr == 'systemd'
   changed_when: false
   ignore_errors: true
 
 - name: ceph_mds | systemctl restart
-  service:
-    name: "{{ item.name }}"
-    state: restarted
-  loop:
-    - { name: "ceph-mds.target" }
-    - { name: "ceph-mds@{{ ansible_hostname }}" }
+  shell: |
+    set -o pipefail
+    systemctl restart ceph-mds.target
+    systemctl restart ceph-mds@{{ ansible_hostname }}
+  args:
+    executable: "/bin/bash"
+  loop: "{{ ansible_play_hosts }}"
+  delegate_to: "{{ item }}"
+  run_once: true
   changed_when: false
   ignore_errors: true
