@@ -34,6 +34,6 @@
   src: https://github.com/alvistack/ansible-role-ceph-osd
   version: develop
 
-- name: ntp
-  src: https://github.com/alvistack/ansible-role-ntp
+- name: chrony
+  src: https://github.com/alvistack/ansible-role-chrony
   version: develop
