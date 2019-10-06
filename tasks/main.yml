@@ -132,10 +132,6 @@
     - ceph_mds | systemctl restart
   tags: ceph_mds
 
-- name: flush handlers
-  meta: flush_handlers
-  tags: ceph_mds
-
 - name: enable services
   service:
     name: "{{ item.name }}"
@@ -145,4 +141,8 @@
     - { name: "ceph-mds@{{ ansible_hostname }}" }
   changed_when: false
   ignore_errors: true
+  tags: ceph_mds
+
+- name: flush handlers
+  meta: flush_handlers
   tags: ceph_mds
