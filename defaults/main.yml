@@ -19,4 +19,4 @@ ceph_release: "nautilus"
 
 # Ceph mds configs.
 ceph_mds_config:
-  - { state: "present", section: "mds", option: "mds cache memory limit", value: "1073741824" }
+  - { state: "present", section: "mds", option: "mds cache memory limit", value: "268435456" }
