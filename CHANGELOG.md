@@ -1,4 +1,4 @@
-# Ansible Role for ceph-mds
+# Ansible Role for Ceph Metadata Server Daemon
 
 ## 4.3.0 - TBC
 
