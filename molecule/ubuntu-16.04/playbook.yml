@@ -24,6 +24,8 @@
 - hosts: ceph_mon:ceph_mgr:ceph_osd:ceph_mds:ceph_rgw
   remote_user: root
   become: true
+  roles:
+    - role: ceph_common
 
 - hosts: ceph_mon
   remote_user: root
