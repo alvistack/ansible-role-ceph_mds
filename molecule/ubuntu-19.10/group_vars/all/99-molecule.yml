@@ -14,18 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- name: ceph_mds | systemctl daemon-reload
-  systemd:
-    daemon_reload: true
-  changed_when: false
-  ignore_errors: true
+ceph_fsid: "{{ hostvars[groups['ceph_mon'][0]].ansible_machine_id | to_uuid }}"
+ceph_mon_initial_members: >-
+  {%- for host in groups['ceph_mon'] -%}
+  {{ host }},
+  {%- endfor -%}
+ceph_mon_host: >-
+  {%- for host in groups['ceph_mon'] -%}
+  {{ hostvars[host].ansible_eth1.ipv4.address }},
+  {%- endfor -%}
+ceph_public_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
+ceph_cluster_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
 
-- name: ceph_mds | systemctl restart
-  service:
-    name: "ceph-mds.target"
-    state: "restarted"
-  loop: "{{ ansible_play_hosts }}"
-  delegate_to: "{{ item }}"
-  run_once: true
-  changed_when: false
-  ignore_errors: true
+ceph_volume:
+  - { objectstore: "bluestore", data: "/dev/vdb" }
