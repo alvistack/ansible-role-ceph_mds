@@ -61,20 +61,6 @@
     - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}", owner: "ceph", group: "ceph" }
   tags: ceph_mds
 
-- name: copy templates
-  template:
-    dest: "{{ item.dest }}"
-    src: "{{ item.src | default('./templates' + item.dest + '.j2') }}"
-    owner: "{{ item.owner | default('root') }}"
-    group: "{{ item.group | default('root') }}"
-    mode: "{{ item.mode | default('0644') }}"
-  loop:
-    - { dest: "/lib/systemd/system/ceph-mds@.service" }
-  notify:
-    - ceph_mds | systemctl daemon-reload
-    - ceph_mds | systemctl restart
-  tags: ceph_mds
-
 - name: touch files
   copy:
     dest: "{{ item.dest }}"
@@ -99,6 +85,19 @@
     - ceph_mds | systemctl restart
   tags: ceph_mds
 
+- name: prepare files
+  file:
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+    state: "{{ item.state | default('file') }}"
+  loop:
+    - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
+  notify:
+    - ceph_mds | systemctl restart
+  tags: ceph_mds
+
 - name: create manager keyring
   shell: |
     set -o pipefail
@@ -108,12 +107,28 @@
       osd 'allow *' \
       mds 'allow *' \
       --out-file /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
+    chown ceph:ceph /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
+    chmod 0600 /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
   args:
     executable: "/bin/bash"
     creates: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring"
   register: result
   changed_when: result is not succeeded
   notify:
+    - ceph_mds | systemctl restart
+  tags: ceph_mds
+
+- name: copy templates
+  template:
+    dest: "{{ item.dest }}"
+    src: "{{ item.src | default('./templates' + item.dest + '.j2') }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop:
+    - { dest: "/lib/systemd/system/ceph-mds@.service" }
+  notify:
+    - ceph_mds | systemctl daemon-reload
     - ceph_mds | systemctl restart
   tags: ceph_mds
 
@@ -125,7 +140,6 @@
     mode: "{{ item.mode | default('0644') }}"
     state: "{{ item.state | default('file') }}"
   loop:
-    - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
   notify:
