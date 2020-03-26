@@ -15,5 +15,6 @@
 # limitations under the License.
 
 _apt:
+  octopus: []
   nautilus:
     - { state: "latest", name: "ceph-mds" }
