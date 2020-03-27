@@ -15,7 +15,7 @@
 # limitations under the License.
 
 _zypper:
-  octopus:
+  "15.2":
     - { state: "latest", name: "ceph-mds" }
-  nautilus:
+  "14.2":
     - { state: "latest", name: "ceph-mds" }
