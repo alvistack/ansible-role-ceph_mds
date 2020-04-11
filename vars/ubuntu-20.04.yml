@@ -15,6 +15,6 @@
 # limitations under the License.
 
 _apt:
-  "15.2": []
-  "14.2":
+  "15.2":
     - { state: "latest", name: "ceph-mds" }
+  "14.2": []
