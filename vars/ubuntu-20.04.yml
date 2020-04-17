@@ -17,4 +17,5 @@
 _apt:
   "15.2":
     - { state: "latest", name: "ceph-mds" }
-  "14.2": []
+  "14.2":
+    - { state: "latest", name: "ceph-mds" }
