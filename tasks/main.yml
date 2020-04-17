@@ -82,7 +82,7 @@
     state: "{{ item.state | default('present') }}"
   loop: "{{ ceph_mds_config }}"
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: prepare files
@@ -95,7 +95,7 @@
   loop:
     - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: create manager keyring
@@ -115,7 +115,7 @@
   register: result
   changed_when: result is not succeeded
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: copy templates
@@ -129,7 +129,7 @@
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
   notify:
     - ceph_mds | systemctl daemon-reload
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: prepare files
@@ -143,7 +143,7 @@
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: flush handlers

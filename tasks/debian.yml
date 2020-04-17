@@ -23,5 +23,5 @@
   register: result
   until: result is succeeded
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
