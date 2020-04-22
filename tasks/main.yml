@@ -82,7 +82,7 @@
     state: "{{ item.state | default('present') }}"
   loop: "{{ ceph_mds_config }}"
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: prepare files
@@ -95,7 +95,7 @@
   loop:
     - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: create manager keyring
@@ -115,7 +115,7 @@
   register: result
   changed_when: result is not succeeded
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: copy templates
@@ -129,7 +129,7 @@
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
   notify:
     - ceph_mds | systemctl daemon-reload
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
 - name: prepare files
@@ -143,21 +143,27 @@
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
   notify:
-    - ceph_mds | systemctl restart
+    - ceph_mds | systemctl restart ceph-mds.target
+  tags: ceph_mds
+
+- name: "systemctl start ceph-mds@{{ ansible_hostname }}"
+  service:
+    name: "ceph-mds@{{ ansible_hostname }}"
+    state: "started"
+    enabled: true
+  changed_when: false
+  ignore_errors: true
+  tags: ceph_mds
+
+- name: systemctl start ceph-mds.target
+  service:
+    name: "ceph-mds.target"
+    state: "started"
+    enabled: true
+  changed_when: false
+  ignore_errors: true
   tags: ceph_mds
 
 - name: flush handlers
   meta: flush_handlers
-  tags: ceph_mds
-
-- name: start services
-  service:
-    name: "{{ item.name }}"
-    state: "started"
-    enabled: true
-  loop:
-    - { name: "ceph-mds.target" }
-    - { name: "ceph-mds@{{ ansible_hostname }}" }
-  changed_when: false
-  ignore_errors: true
   tags: ceph_mds
