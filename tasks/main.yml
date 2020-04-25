@@ -58,7 +58,7 @@
   loop:
     - { dest: "/etc/ceph" }
     - { dest: "/lib/systemd/system" }
-    - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}", owner: "ceph", group: "ceph" }
+    - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}", owner: "ceph", group: "ceph" }
   tags: ceph_mds
 
 - name: touch files
@@ -102,16 +102,16 @@
   shell: |
     set -o pipefail
     ceph \
-      auth get-or-create mds.{{ ansible_hostname }} \
+      auth get-or-create mds.{{ inventory_hostname }} \
       mon 'allow profile mds' \
       osd 'allow *' \
       mds 'allow *' \
-      --out-file /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
-    chown ceph:ceph /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
-    chmod 0600 /var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring
+      --out-file /var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring
+    chown ceph:ceph /var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring
+    chmod 0600 /var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring
   args:
     executable: "/bin/bash"
-    creates: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring"
+    creates: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring"
   register: result
   changed_when: result is not succeeded
   notify:
@@ -141,14 +141,14 @@
     state: "{{ item.state | default('file') }}"
   loop:
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
-    - { dest: "/var/lib/ceph/mds/ceph-{{ ansible_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
+    - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
   notify:
     - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
-- name: "systemctl start ceph-mds@{{ ansible_hostname }}"
+- name: "systemctl start ceph-mds@{{ inventory_hostname }}"
   service:
-    name: "ceph-mds@{{ ansible_hostname }}"
+    name: "ceph-mds@{{ inventory_hostname }}"
     state: "started"
     enabled: true
   changed_when: false
