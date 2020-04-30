@@ -4,6 +4,7 @@
 
 ### Major Changes
 
+  - Discovery device for OSD from `ansible_devices`
   - Template complex variable with Jinja `namespace()`
   - Replace use of `ansible_hostname` with `inventory_hostname`
   - `molecule -s default` with delegated to localhost
