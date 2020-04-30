@@ -17,6 +17,6 @@
 # Ceph version.
 ceph_release: "15.2"
 
-# Ceph mds configs.
+# Ceph Metadata Server Daemon configs.
 ceph_mds_config:
   - { state: "present", section: "mds", option: "mds cache memory limit", value: "1073741824" }
