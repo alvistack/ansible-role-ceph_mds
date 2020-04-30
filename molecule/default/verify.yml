@@ -64,18 +64,6 @@
   remote_user: root
   become: true
   tasks:
-    - name: ceph fs new cephfs
-      shell: |
-        set -o pipefail
-        ceph fs new cephfs cephfs_metadata cephfs_data
-        ceph fs set cephfs standby_count_wanted 0
-        ceph fs set cephfs max_mds 1
-      args:
-        executable: "/bin/bash"
-      when: inventory_hostname == ansible_play_hosts[0]
-      changed_when: false
-      ignore_errors: true
-
     - name: ceph --status
       command: ceph --status
       register: result

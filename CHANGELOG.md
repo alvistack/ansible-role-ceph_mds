@@ -4,6 +4,7 @@
 
 ### Major Changes
 
+  - Support CephFS creation
   - Support OSD pool creation
   - Discovery device for OSD from `ansible_devices`
   - Template complex variable with Jinja `namespace()`
