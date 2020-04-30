@@ -167,3 +167,14 @@
 - name: flush handlers
   meta: flush_handlers
   tags: ceph_mds
+
+- name: ceph fs new
+  shell: |
+    set -o pipefail
+    ceph fs new {{ item.name }} {{ item.metadata }} {{ item.data }}
+  args:
+    executable: "/bin/bash"
+  loop: "{{ ceph_mds_cephfs }}"
+  when: inventory_hostname == ansible_play_hosts[0]
+  changed_when: false
+  ignore_errors: true
