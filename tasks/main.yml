@@ -79,6 +79,7 @@
     section: "{{ item.section }}"
     option: "{{ item.option | default(None) or omit }}"
     value: "{{ item.value | default(None) or omit }}"
+    mode: "{{ item.mode | default('0644') }}"
     state: "{{ item.state | default('present') }}"
   loop: "{{ ceph_mds_config }}"
   notify:
