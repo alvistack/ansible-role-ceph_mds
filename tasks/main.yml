@@ -58,6 +58,7 @@
   loop:
     - { dest: "/etc/ceph" }
     - { dest: "/lib/systemd/system" }
+    - { dest: "/lib/systemd/system/ceph-mds.target.d" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}", owner: "ceph", group: "ceph" }
   tags: ceph_mds
 
