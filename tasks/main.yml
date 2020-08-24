@@ -148,9 +148,9 @@
     - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
-- name: "systemctl start ceph-mds@{{ inventory_hostname }}"
+- name: "systemctl start ceph-mds@{{ inventory_hostname }}.service"
   service:
-    name: "ceph-mds@{{ inventory_hostname }}"
+    name: "ceph-mds@{{ inventory_hostname }}.service"
     state: "started"
     enabled: true
   changed_when: false
