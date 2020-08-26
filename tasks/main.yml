@@ -58,6 +58,7 @@
   loop:
     - { dest: "/etc/ceph" }
     - { dest: "/lib/systemd/system" }
+    - { dest: "/lib/systemd/system/ceph-mds.target.d" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}", owner: "ceph", group: "ceph" }
   tags: ceph_mds
 
@@ -147,9 +148,9 @@
     - ceph_mds | systemctl restart ceph-mds.target
   tags: ceph_mds
 
-- name: "systemctl start ceph-mds@{{ inventory_hostname }}"
+- name: "systemctl start ceph-mds@{{ inventory_hostname }}.service"
   service:
-    name: "ceph-mds@{{ inventory_hostname }}"
+    name: "ceph-mds@{{ inventory_hostname }}.service"
     state: "started"
     enabled: true
   changed_when: false
