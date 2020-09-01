@@ -128,6 +128,7 @@
     group: "{{ item.group | default('root') }}"
     mode: "{{ item.mode | default('0644') }}"
   loop:
+    - { dest: "/lib/systemd/system/ceph-mds.target" }
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
   notify:
     - ceph_mds | systemctl daemon-reload
@@ -142,6 +143,7 @@
     mode: "{{ item.mode | default('0644') }}"
     state: "{{ item.state | default('file') }}"
   loop:
+    - { dest: "/lib/systemd/system/ceph-mds.target" }
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
   notify:
