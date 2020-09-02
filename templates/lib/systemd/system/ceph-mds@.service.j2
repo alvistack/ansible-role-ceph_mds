@@ -2,9 +2,11 @@
 
 [Unit]
 Description=Ceph metadata server daemon
-After=network-online.target local-fs.target time-sync.target
-Wants=network-online.target local-fs.target time-sync.target
 PartOf=ceph-mds.target
+After=network-online.target local-fs.target time-sync.target
+Before=ceph-mds.target
+Wants=network-online.target local-fs.target time-sync.target ceph-mds.target
+RequiresMountsFor=/var/lib/ceph
 
 [Service]
 LimitNOFILE=1048576
