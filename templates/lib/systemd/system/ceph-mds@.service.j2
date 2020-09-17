@@ -4,8 +4,8 @@
 Description=Ceph metadata server daemon
 PartOf=ceph-mds.target
 After=network-online.target local-fs.target time-sync.target
-Before=ceph-mds.target
-Wants=network-online.target local-fs.target time-sync.target ceph-mds.target
+Before=remote-fs-pre.target ceph-mds.target
+Wants=network-online.target local-fs.target time-sync.target remote-fs-pre.target ceph-mds.target
 RequiresMountsFor=/var/lib/ceph
 
 [Service]
