@@ -16,7 +16,6 @@
 
 - name: include default variables
   include_vars: "../vars/main.yml"
-  tags: ceph_mds
 
 - name: include release specific variables
   include_vars: "{{ lookup('first_found', _params) }}"
@@ -31,7 +30,6 @@
       paths:
         - "../vars"
   ignore_errors: true
-  tags: ceph_mds
 
 - name: include release specific tasks
   include_tasks: "{{ lookup('first_found', _params) }}"
@@ -46,7 +44,6 @@
       paths:
         - "."
   ignore_errors: true
-  tags: ceph_mds
 
 - name: prepare directories
   file:
@@ -60,7 +57,6 @@
     - { dest: "/lib/systemd/system" }
     - { dest: "/lib/systemd/system/ceph-mds.target.d" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}", owner: "ceph", group: "ceph" }
-  tags: ceph_mds
 
 - name: touch files
   copy:
@@ -72,7 +68,6 @@
     force: false
   loop:
     - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
-  tags: ceph_mds
 
 - name: tweak settings in ini files
   ini_file:
@@ -85,7 +80,6 @@
   loop: "{{ ceph_mds_config }}"
   notify:
     - ceph_mds | systemctl restart ceph-mds.target
-  tags: ceph_mds
 
 - name: prepare files
   file:
@@ -98,7 +92,6 @@
     - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
   notify:
     - ceph_mds | systemctl restart ceph-mds.target
-  tags: ceph_mds
 
 - name: create manager keyring
   shell: |
@@ -118,7 +111,6 @@
   changed_when: result is not succeeded
   notify:
     - ceph_mds | systemctl restart ceph-mds.target
-  tags: ceph_mds
 
 - name: copy templates
   template:
@@ -133,7 +125,6 @@
   notify:
     - ceph_mds | systemctl daemon-reload
     - ceph_mds | systemctl restart ceph-mds.target
-  tags: ceph_mds
 
 - name: prepare files
   file:
@@ -149,7 +140,6 @@
   notify:
     - ceph_mds | systemctl daemon-reload
     - ceph_mds | systemctl restart ceph-mds.target
-  tags: ceph_mds
 
 - name: "systemctl start ceph-mds@{{ inventory_hostname }}.service"
   service:
@@ -158,7 +148,6 @@
     enabled: true
   changed_when: false
   ignore_errors: true
-  tags: ceph_mds
 
 - name: systemctl start ceph-mds.target
   service:
@@ -167,11 +156,9 @@
     enabled: true
   changed_when: false
   ignore_errors: true
-  tags: ceph_mds
 
 - name: flush handlers
   meta: flush_handlers
-  tags: ceph_mds
 
 - name: ceph fs new
   shell: |
