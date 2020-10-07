@@ -141,6 +141,9 @@
     - ceph_mds | systemctl daemon-reload
     - ceph_mds | systemctl restart ceph-mds.target
 
+- name: flush handlers
+  meta: flush_handlers
+
 - name: "systemctl start ceph-mds@{{ inventory_hostname }}.service"
   service:
     name: "ceph-mds@{{ inventory_hostname }}.service"
@@ -156,9 +159,6 @@
     enabled: true
   changed_when: false
   ignore_errors: true
-
-- name: flush handlers
-  meta: flush_handlers
 
 - name: ceph fs new
   shell: |
