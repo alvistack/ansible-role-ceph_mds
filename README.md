@@ -1,6 +1,6 @@
 # Ansible Role for Ceph Metadata Server Daemon
 
-[![Travis](https://img.shields.io/travis/com/alvistack/ansible-role-ceph_mds.svg)](https://travis-ci.com/alvistack/ansible-role-ceph_mds)
+[![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/alvistack/ansible-role-ceph_mds/master)](https://gitlab.com/alvistack/ansible-role-ceph_mds/-/pipelines)
 [![GitHub release](https://img.shields.io/github/release/alvistack/ansible-role-ceph_mds.svg)](https://github.com/alvistack/ansible-role-ceph_mds/releases)
 [![GitHub license](https://img.shields.io/github/license/alvistack/ansible-role-ceph_mds.svg)](https://github.com/alvistack/ansible-role-ceph_mds/blob/master/LICENSE)
 [![Ansible Role](https://img.shields.io/badge/galaxy-alvistack.ceph_mds-blue.svg)](https://galaxy.ansible.com/alvistack/ceph_mds)
