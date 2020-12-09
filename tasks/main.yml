@@ -95,7 +95,7 @@
 
 - name: create manager keyring
   shell: |
-    set -o pipefail
+    set -euo pipefail
     ceph \
       auth get-or-create mds.{{ inventory_hostname }} \
       mon 'allow profile mds' \
@@ -162,7 +162,7 @@
 
 - name: ceph fs new
   shell: |
-    set -o pipefail
+    set -euo pipefail
     ceph fs new {{ item.name }} {{ item.metadata }} {{ item.data }}
   args:
     executable: "/bin/bash"
