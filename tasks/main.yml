@@ -145,7 +145,7 @@
   meta: flush_handlers
 
 - name: "systemctl start ceph-mds@{{ inventory_hostname }}.service"
-  shell:
+  shell: |
     set -euo pipefail
     systemctl enable ceph-mds@{{ inventory_hostname }}.service
     systemctl start ceph-mds@{{ inventory_hostname }}.service
