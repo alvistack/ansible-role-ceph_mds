@@ -145,10 +145,12 @@
   meta: flush_handlers
 
 - name: "systemctl start ceph-mds@{{ inventory_hostname }}.service"
-  service:
-    name: "ceph-mds@{{ inventory_hostname }}.service"
-    state: "started"
-    enabled: true
+  shell: |
+    set -euo pipefail
+    systemctl enable ceph-mds@{{ inventory_hostname }}.service
+    systemctl start ceph-mds@{{ inventory_hostname }}.service
+  args:
+    executable: "/bin/bash"
   changed_when: false
   ignore_errors: true
 
@@ -161,11 +163,12 @@
   ignore_errors: true
 
 - name: ceph fs new
-  shell: |
-    set -euo pipefail
-    ceph fs new {{ item.name }} {{ item.metadata }} {{ item.data }}
-  args:
-    executable: "/bin/bash"
+  ceph_fs:
+    name: "{{ item.name }}"
+    metadata: "{{ item.metadata }}"
+    data: "{{ item.data }}"
+    max_mds: "{{ item.max_mds | default(omit) }}"
+    state: "present"
   loop: "{{ ceph_mds_cephfs }}"
   when: inventory_hostname == ansible_play_hosts[0]
   changed_when: false
