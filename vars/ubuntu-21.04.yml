@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-_zypper:
+_apt:
   "16.2":
     - { state: "latest", name: "ceph-mds" }
-  "15.2":
-    - { state: "latest", name: "ceph-mds" }
+  "15.2": []

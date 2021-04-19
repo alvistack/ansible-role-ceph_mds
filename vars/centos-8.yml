@@ -15,5 +15,7 @@
 # limitations under the License.
 
 _yum:
+  "16.2":
+    - { state: "latest", name: "ceph-mds" }
   "15.2":
     - { state: "latest", name: "ceph-mds" }
