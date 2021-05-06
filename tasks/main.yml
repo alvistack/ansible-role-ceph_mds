@@ -29,7 +29,7 @@
         - "{{ ansible_os_family | lower }}.yml"
       paths:
         - "../vars"
-  ignore_errors: true
+  failed_when: false
 
 - name: include release specific tasks
   include_tasks: "{{ lookup('first_found', _params) }}"
@@ -43,7 +43,7 @@
         - "{{ ansible_os_family | lower }}.yml"
       paths:
         - "."
-  ignore_errors: true
+  failed_when: false
 
 - name: prepare directories
   file:
@@ -156,7 +156,7 @@
   args:
     executable: "/bin/bash"
   changed_when: false
-  ignore_errors: true
+  failed_when: false
 
 - name: systemctl start ceph-mds.target
   service:
@@ -164,7 +164,7 @@
     state: "started"
     enabled: true
   changed_when: false
-  ignore_errors: true
+  failed_when: false
 
 - name: ceph fs new
   ceph_fs:
@@ -176,4 +176,4 @@
   loop: "{{ ceph_mds_cephfs }}"
   when: inventory_hostname == ansible_play_hosts[0]
   changed_when: false
-  ignore_errors: true
+  failed_when: false
