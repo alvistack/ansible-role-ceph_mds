@@ -64,7 +64,7 @@
     - { dest: "/etc/ceph" }
     - { dest: "/lib/systemd/system" }
     - { dest: "/lib/systemd/system/ceph-mds.target.d" }
-    - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}", owner: "ceph", group: "ceph" }
+    - { dest: "/var/lib/ceph/mds", owner: "ceph", group: "ceph" }
 
 - name: touch files
   copy:
@@ -104,6 +104,9 @@
 - name: create manager keyring
   shell: |
     set -euxo pipefail
+    mkdir -p /var/lib/ceph/mds/ceph-{{ inventory_hostname }}
+    chown ceph:ceph /var/lib/ceph/mds/ceph-{{ inventory_hostname }}
+    chmod 0755 /var/lib/ceph/mds/ceph-{{ inventory_hostname }}
     ceph \
       auth get-or-create mds.{{ inventory_hostname }} \
       mon 'allow profile mds' \
