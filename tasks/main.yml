@@ -114,7 +114,7 @@
       mds 'allow *' \
       --out-file /var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring
     chown ceph:ceph /var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring
-    chmod 0600 /var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring
+    chmod 0400 /var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring
   args:
     executable: "/bin/bash"
     creates: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring"
@@ -151,7 +151,7 @@
   loop:
     - { dest: "/lib/systemd/system/ceph-mds.target" }
     - { dest: "/lib/systemd/system/ceph-mds@.service" }
-    - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0600" }
+    - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0400" }
   notify:
     - ceph_mds | systemctl daemon-reload
     - ceph_mds | systemctl restart ceph-mds.target
