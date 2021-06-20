@@ -223,7 +223,10 @@ def create_fs(module, container_image=None):
 
     args = ['new', name, metadata, data]
 
-    cmd = generate_ceph_cmd(sub_cmd=['fs'], args=args, cluster=cluster, container_image=container_image)  # noqa E501
+    cmd = generate_ceph_cmd(sub_cmd=['fs'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
 
     return cmd
 
@@ -238,7 +241,10 @@ def get_fs(module, container_image=None):
 
     args = ['get', name, '--format=json']
 
-    cmd = generate_ceph_cmd(sub_cmd=['fs'], args=args, cluster=cluster, container_image=container_image)  # noqa E501
+    cmd = generate_ceph_cmd(sub_cmd=['fs'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
 
     return cmd
 
@@ -253,7 +259,10 @@ def remove_fs(module, container_image=None):
 
     args = ['rm', name, '--yes-i-really-mean-it']
 
-    cmd = generate_ceph_cmd(sub_cmd=['fs'], args=args, cluster=cluster, container_image=container_image)  # noqa E501
+    cmd = generate_ceph_cmd(sub_cmd=['fs'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
 
     return cmd
 
@@ -268,7 +277,10 @@ def fail_fs(module, container_image=None):
 
     args = ['fail', name]
 
-    cmd = generate_ceph_cmd(sub_cmd=['fs'], args=args, cluster=cluster, container_image=container_image)  # noqa E501
+    cmd = generate_ceph_cmd(sub_cmd=['fs'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
 
     return cmd
 
@@ -284,7 +296,10 @@ def set_fs(module, container_image=None):
 
     args = ['set', name, 'max_mds', str(max_mds)]
 
-    cmd = generate_ceph_cmd(sub_cmd=['fs'], args=args, cluster=cluster, container_image=container_image)  # noqa E501
+    cmd = generate_ceph_cmd(sub_cmd=['fs'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
 
     return cmd
 
@@ -293,7 +308,7 @@ def run_module():
     module_args = dict(
         cluster=dict(type='str', required=False, default='ceph'),
         name=dict(type='str', required=True),
-        state=dict(type='str', required=False, choices=['present', 'absent', 'info'], default='present'),  # noqa E501
+        state=dict(type='str', required=False, choices=['present', 'absent', 'info'], default='present'),  # noqa: E501
         data=dict(type='str', required=False),
         metadata=dict(type='str', required=False),
         max_mds=dict(type='int', required=False),
@@ -328,25 +343,25 @@ def run_module():
     container_image = is_containerized()
 
     if state == "present":
-        rc, cmd, out, err = exec_command(module, get_fs(module, container_image=container_image))  # noqa E501
+        rc, cmd, out, err = exec_command(module, get_fs(module, container_image=container_image))  # noqa: E501
         if rc == 0:
             fs = json.loads(out)
             if max_mds and fs["mdsmap"]["max_mds"] != max_mds:
-                rc, cmd, out, err = exec_command(module, set_fs(module, container_image=container_image))  # noqa E501
+                rc, cmd, out, err = exec_command(module, set_fs(module, container_image=container_image))  # noqa: E501
                 if rc == 0:
                     changed = True
         else:
-            rc, cmd, out, err = exec_command(module, create_fs(module, container_image=container_image))  # noqa E501
+            rc, cmd, out, err = exec_command(module, create_fs(module, container_image=container_image))  # noqa: E501
             if max_mds and max_mds > 1:
-                exec_command(module, set_fs(module, container_image=container_image))  # noqa E501
+                exec_command(module, set_fs(module, container_image=container_image))  # noqa: E501
             if rc == 0:
                 changed = True
 
     elif state == "absent":
-        rc, cmd, out, err = exec_command(module, get_fs(module, container_image=container_image))  # noqa E501
+        rc, cmd, out, err = exec_command(module, get_fs(module, container_image=container_image))  # noqa: E501
         if rc == 0:
-            exec_command(module, fail_fs(module, container_image=container_image))  # noqa E501
-            rc, cmd, out, err = exec_command(module, remove_fs(module, container_image=container_image))  # noqa E501
+            exec_command(module, fail_fs(module, container_image=container_image))  # noqa: E501
+            rc, cmd, out, err = exec_command(module, remove_fs(module, container_image=container_image))  # noqa: E501
             if rc == 0:
                 changed = True
         else:
@@ -354,9 +369,9 @@ def run_module():
             out = "Ceph File System {} doesn't exist".format(name)
 
     elif state == "info":
-        rc, cmd, out, err = exec_command(module, get_fs(module, container_image=container_image))  # noqa E501
+        rc, cmd, out, err = exec_command(module, get_fs(module, container_image=container_image))  # noqa: E501
 
-    exit_module(module=module, out=out, rc=rc, cmd=cmd, err=err, startd=startd, changed=changed)  # noqa E501
+    exit_module(module=module, out=out, rc=rc, cmd=cmd, err=err, startd=startd, changed=changed)  # noqa: E501
 
 
 def main():
