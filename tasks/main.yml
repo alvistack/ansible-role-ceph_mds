@@ -62,8 +62,6 @@
     state: "{{ item.state | default('directory') }}"
   loop:
     - { dest: "/etc/ceph" }
-    - { dest: "/lib/systemd/system" }
-    - { dest: "/lib/systemd/system/ceph-mds.target.d" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}", owner: "ceph", group: "ceph" }
 
 - name: base64 encode
@@ -139,24 +137,6 @@
   notify:
     - ceph_mds | systemctl restart ceph-mds.target
 
-- name: tweak settings in ini files
-  ini_file:
-    section: "{{ item.section }}"
-    option: "{{ item.option }}"
-    value: "{{ item.value }}"
-    state: "{{ item.state }}"
-    path: "/lib/systemd/system/ceph-mds@.service"
-    no_extra_spaces: true
-    mode: "0644"
-  loop:
-    - { state: "present", section: "Service", option: "ProtectClock", value: "false" }
-    - { state: "present", section: "Service", option: "ProtectHostname", value: "false" }
-    - { state: "present", section: "Service", option: "ProtectKernelLogs", value: "false" }
-    - { state: "present", section: "Service", option: "RestrictSUIDSGID", value: "false" }
-  notify:
-    - ceph_mds | systemctl daemon-reload
-    - ceph_mds | systemctl restart ceph-mds.target
-
 - name: prepare files
   file:
     dest: "{{ item.dest }}"
@@ -165,11 +145,8 @@
     mode: "{{ item.mode | default('0644') }}"
     state: "{{ item.state | default('file') }}"
   loop:
-    - { dest: "/lib/systemd/system/ceph-mds.target" }
-    - { dest: "/lib/systemd/system/ceph-mds@.service" }
     - { dest: "/var/lib/ceph/mds/ceph-{{ inventory_hostname }}/keyring", owner: "ceph", group: "ceph", mode: "0400" }
   notify:
-    - ceph_mds | systemctl daemon-reload
     - ceph_mds | systemctl restart ceph-mds.target
 
 - name: flush handlers
