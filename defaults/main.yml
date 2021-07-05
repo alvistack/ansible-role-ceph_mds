@@ -19,9 +19,13 @@ ceph_release: "16.2"
 
 # Ceph Metadata Server Daemon configs.
 ceph_mds_config:
-  - { state: "present", section: "mds", option: "mds cache memory limit", value: "268435456" }
-  - { state: "present", section: "mds", option: "mds cache reservation", value: "0.50" }
-  - { state: "present", section: "mds", option: "mds health cache threshold", value: "2.0" }
+  - { state: "present", section: "mds", option: "mds_cache_memory_limit", value: "536870912" }
+  - { state: "present", section: "mds", option: "mds_cache_reservation", value: "0.5" }
+  - { state: "present", section: "mds", option: "mds_health_cache_threshold", value: "2.0" }
+  - { state: "present", section: "mds", option: "mds_recall_global_max_decay_threshold", value: "524288" }
+  - { state: "present", section: "mds", option: "mds_recall_max_caps", value: "131072" }
+  - { state: "present", section: "mds", option: "mds_recall_max_decay_rate", value: "1.0" }
+  - { state: "present", section: "mds", option: "mds_recall_max_decay_threshold", value: "262144" }
 
 # CephFS to be created.
 ceph_mds_cephfs:
