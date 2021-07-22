@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Ceph version.
-ceph_release: "16.2"
+ceph_release: "{{ _ceph_release }}"
 
 # Ceph Metadata Server Daemon configs.
 ceph_mds_config:
