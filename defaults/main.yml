@@ -14,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Ceph version.
+# Ceph relesae.
 ceph_release: "{{ _ceph_release }}"
+
+# Ceph version.
+ceph_version: "{{ _ceph_version[ceph_release] }}"
 
 # Ceph Metadata Server Daemon configs.
 ceph_mds_config:

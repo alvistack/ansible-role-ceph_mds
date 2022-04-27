@@ -20,4 +20,4 @@ _yum:
   "17.2": []
   "16.2": []
   "15.2":
-    - { state: "latest", name: "ceph-mds" }
+    - { state: "present", name: "ceph-mds-{{ ceph_version }}*" }
