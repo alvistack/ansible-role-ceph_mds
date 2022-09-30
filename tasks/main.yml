@@ -99,7 +99,7 @@
     - { dest: "/etc/ceph/ceph.conf", owner: "ceph", group: "ceph" }
 
 - name: tweak settings in ini files
-  ini_file:
+  community.general.ini_file:
     section: "{{ item.section }}"
     option: "{{ item.option }}"
     value: "{{ item.value }}"
@@ -123,7 +123,7 @@
     - ceph_mds | systemctl restart ceph-mds.target
 
 - name: create mds keyring
-  ceph_key:
+  ceph_key: # noqa fqcn[action]
     name: "{{ item.name }}"
     dest: "{{ item.dest }}"
     caps: "{{ item.caps | default(omit) }}"
@@ -170,7 +170,7 @@
   failed_when: false
 
 - name: ceph fs new
-  ceph_fs:
+  ceph_fs: # noqa fqcn[action]
     name: "{{ item.name }}"
     metadata: "{{ item.metadata }}"
     data: "{{ item.data }}"
