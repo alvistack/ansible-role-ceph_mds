@@ -18,6 +18,6 @@ _ceph_release: "17.2"
 
 _zypper:
   "17.2":
-    - { state: "present", name: "ceph-mds-{{ ceph_version }}" }
+    - { state: "present", name: "ceph-mds-100:{{ ceph_version }}" }
   "16.2": []
   "15.2": []
