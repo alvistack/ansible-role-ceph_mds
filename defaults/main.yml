@@ -35,3 +35,7 @@ ceph_mds_config:
 # CephFS to be created.
 ceph_mds_cephfs:
   - { name: cephfs, metadata: cephfs_metadata, data: cephfs_data }
+
+# CephFS subvolume group to be created.
+ceph_mds_subvolumegroup:
+  - { vol_name: cephfs, group_name: csi }

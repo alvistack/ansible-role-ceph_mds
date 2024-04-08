@@ -181,3 +181,17 @@
   when: inventory_hostname == ansible_play_hosts[0]
   changed_when: false
   failed_when: false
+
+- name: ceph fs subvolumegroup create
+  ansible.builtin.shell:
+    cmd: |
+      set -euxo pipefail
+      ceph fs subvolumegroup create \
+        {{ item.vol_name }} \
+        {{ item.group_name }}
+  args:
+    executable: /bin/bash
+  loop: "{{ ceph_mds_subvolumegroup }}"
+  when: inventory_hostname == ansible_play_hosts[0]
+  changed_when: false
+  failed_when: false
