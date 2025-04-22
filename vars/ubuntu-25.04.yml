@@ -14,9 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-_ceph_version:
-  "19.2": 19.2.2
-  "18.2": 18.2.6
-  "17.2": 17.2.8
-  "16.2": 16.2.15
-  "15.2": 15.2.17
+_ceph_release: "19.2"
+
+_apt:
+  "19.2":
+    - { state: present, name: "ceph-mds=100:{{ ceph_version }}*" }
+  "18.2":
+    - { state: present, name: "ceph-mds=100:{{ ceph_version }}*" }
+  "17.2": []
+  "16.2": []
+  "15.2": []
