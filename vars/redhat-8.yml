@@ -17,4 +17,5 @@
 _ceph_release: "17.2"
 
 _yum:
+  - { state: present, name: "ceph-base-100:{{ ceph_version }}*" }
   - { state: present, name: "ceph-mds-100:{{ ceph_version }}*" }
