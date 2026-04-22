@@ -20,9 +20,12 @@ ceph_release: "{{ _ceph_release }}"
 # Ceph version.
 ceph_version: "{{ _ceph_version[ceph_release] }}"
 
+# Ceph detected memory total (default with 8192Mi).
+ceph_memtotal_mb: "{{ (((ansible_facts['ansible_memtotal_mb'] / 1024) | round(0, 'ceil')) * 1024) | int }}"
+
 # Ceph Metadata Server Daemon configs.
 ceph_mds_config:
-  - { state: present, section: mds, option: mds_cache_memory_limit, value: "{{ (1 * 1024 * 1024 * 1024) | int }}" }  # 4Gi / 4
+  - { state: present, section: mds, option: mds_cache_memory_limit, value: "{{ ((ceph_memtotal_mb / 8) * 1024 * 1024) | int }}" }  # 4Gi / 4 ~= 1024Mi
   - { state: present, section: mds, option: mds_cache_reservation, value: "0.5" }  # 0.05
   - { state: present, section: mds, option: mds_cache_trim_decay_rate, value: "0.5" }  # 1
   - { state: present, section: mds, option: mds_cache_trim_threshold, value: "{{ (512 * 1024) | int }}" }  # 256Ki * 2
