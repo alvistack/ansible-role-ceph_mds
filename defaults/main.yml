@@ -26,7 +26,7 @@ ceph_memtotal_mb: "{{ (((ansible_facts['memtotal_mb'] + 8191) // 8192) * 8192) |
 # Ceph Metadata Server Daemon configs.
 # See https://github.com/ceph/ceph/blob/main/src/common/options/mds.yaml.in
 ceph_mds_config:
-  - { state: present, section: mds, option: mds_cache_memory_limit, value: "{{ (ceph_memtotal_mb * (512 / 8192) * 1024 * 1024) | int }}" }  # 4Gi / 8 ~= 512Mi
+  - { state: present, section: mds, option: mds_cache_memory_limit, value: "{{ ((ceph_memtotal_mb | float) * (512 / 8192) * 1024 * 1024) | int }}" }  # 4Gi / 8 ~= 512Mi
   - { state: present, section: mds, option: mds_cache_reservation, value: "0.5" }  # 0.05
   - { state: present, section: mds, option: mds_cache_trim_decay_rate, value: "0.5" }  # 1
   - { state: present, section: mds, option: mds_cache_trim_threshold, value: "{{ (512 * 1024) | int }}" }  # 256Ki * 2 ~= 512Ki
