@@ -22,6 +22,7 @@ from ansible.module_utils.basic import AnsibleModule
 import datetime
 import json
 import os
+import re
 
 
 ANSIBLE_METADATA = {
@@ -129,7 +130,7 @@ def container_exec(binary, container_image, interactive=False):
     Build the docker CLI to run a command inside a container
     '''
 
-    container_binary = os.getenv('CEPH_CONTAINER_BINARY')
+    container_binary = os.getenv('CEPH_CONTAINER_BINARY', 'podman')
     command_exec = [container_binary, 'run']
 
     if interactive:
@@ -211,6 +212,23 @@ def fatal(message, module):
         raise (Exception(message))
 
 
+def detect_ceph_version(module, container_image=None):
+    '''
+    Automatically detect the major version of Ceph running on host/container
+    '''
+    cmd = pre_generate_ceph_cmd(container_image=container_image)
+    cmd.append('--version')
+    rc, out, err = module.run_command(cmd)
+
+    if rc == 0 and out:
+        match = re.search(r'version\s+(\d+)\.', out)
+        if match:
+            return int(match.group(1))
+
+    # Default to 20 if version querying fails
+    return 20
+
+
 def create_fs(module, container_image=None):
     '''
     Create a new fs
@@ -251,13 +269,18 @@ def get_fs(module, container_image=None):
 
 def remove_fs(module, container_image=None):
     '''
-    Remove a fs
+    Remove a fs with version-aware flag handling
     '''
 
     cluster = module.params.get('cluster')
     name = module.params.get('name')
+    major_version = detect_ceph_version(module, container_image)
 
     args = ['rm', name, '--yes-i-really-mean-it']
+
+    # Ceph 18.x (Reef) and Ceph 20.x (Squid) require --force flag
+    if major_version >= 18:
+        args.append('--force')
 
     cmd = generate_ceph_cmd(sub_cmd=['fs'],
                             args=args,
