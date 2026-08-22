@@ -128,6 +128,7 @@
     name: "{{ item.name }}"
     dest: "{{ item.dest }}"
     caps: "{{ item.caps | default(omit) }}"
+    key_type: "{{ item.key_type | default(omit) }}"
     owner: "{{ item.owner | default('ceph') }}"
     group: "{{ item.group | default('ceph') }}"
     mode: "{{ item.mode | default('0400') }}"
