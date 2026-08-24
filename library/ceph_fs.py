@@ -22,6 +22,7 @@ from ansible.module_utils.basic import AnsibleModule
 import datetime
 import json
 import os
+import re
 
 
 ANSIBLE_METADATA = {
@@ -40,6 +41,7 @@ version_added: "2.8"
 
 description:
     - Manage Ceph File System(s) creation, deletion and updates.
+    - Manage Ceph File System subvolumegroup creation, deletion and updates.
 options:
     cluster:
         description:
@@ -53,7 +55,7 @@ options:
     state:
         description:
             If 'present' is used, the module creates a filesystem if it
-            doesn't  exist or update it if it already exists.
+            doesn't exist or update it if it already exists.
             If 'absent' is used, the module will simply delete the filesystem.
             If 'info' is used, the module will return all details about the
             existing filesystem (json formatted).
@@ -71,6 +73,10 @@ options:
     max_mds:
         description:
             - name of the max_mds attribute.
+        required: false
+    subvolumegroup:
+        description:
+            - name of the subvolumegroup to manage.
         required: false
 
 
@@ -94,6 +100,18 @@ EXAMPLES = '''
 - name: delete a Ceph File System
   ceph_fs:
     name: foo
+    state: absent
+
+- name: create a subvolumegroup
+  ceph_fs:
+    name: foo
+    subvolumegroup: csi
+    state: present
+
+- name: delete a subvolumegroup
+  ceph_fs:
+    name: foo
+    subvolumegroup: csi
     state: absent
 '''
 
@@ -129,7 +147,7 @@ def container_exec(binary, container_image, interactive=False):
     Build the docker CLI to run a command inside a container
     '''
 
-    container_binary = os.getenv('CEPH_CONTAINER_BINARY')
+    container_binary = os.getenv('CEPH_CONTAINER_BINARY', 'podman')
     command_exec = [container_binary, 'run']
 
     if interactive:
@@ -211,6 +229,23 @@ def fatal(message, module):
         raise (Exception(message))
 
 
+def detect_ceph_version(module, container_image=None):
+    '''
+    Automatically detect the major version of Ceph running on host/container
+    '''
+    cmd = pre_generate_ceph_cmd(container_image=container_image)
+    cmd.append('--version')
+    rc, out, err = module.run_command(cmd)
+
+    if rc == 0 and out:
+        match = re.search(r'version\s+(\d+)\.', out)
+        if match:
+            return int(match.group(1))
+
+    # Default to 20 if version querying fails
+    return 20
+
+
 def create_fs(module, container_image=None):
     '''
     Create a new fs
@@ -251,13 +286,18 @@ def get_fs(module, container_image=None):
 
 def remove_fs(module, container_image=None):
     '''
-    Remove a fs
+    Remove a fs with version-aware flag handling
     '''
 
     cluster = module.params.get('cluster')
     name = module.params.get('name')
+    major_version = detect_ceph_version(module, container_image)
 
     args = ['rm', name, '--yes-i-really-mean-it']
+
+    # Ceph 18.x (Reef) and Ceph 20.x (Squid) require --force flag
+    if major_version >= 18:
+        args.append('--force')
 
     cmd = generate_ceph_cmd(sub_cmd=['fs'],
                             args=args,
@@ -304,6 +344,62 @@ def set_fs(module, container_image=None):
     return cmd
 
 
+def create_subvolumegroup(module, container_image=None):
+    '''
+    Create a subvolumegroup
+    '''
+
+    cluster = module.params.get('cluster')
+    name = module.params.get('name')
+    subvolumegroup = module.params.get('subvolumegroup')
+
+    args = ['create', name, subvolumegroup]
+
+    cmd = generate_ceph_cmd(sub_cmd=['fs', 'subvolumegroup'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
+
+    return cmd
+
+
+def list_subvolumegroups(module, container_image=None):
+    '''
+    List subvolumegroups
+    '''
+
+    cluster = module.params.get('cluster')
+    name = module.params.get('name')
+
+    args = ['ls', name, '--format=json']
+
+    cmd = generate_ceph_cmd(sub_cmd=['fs', 'subvolumegroup'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
+
+    return cmd
+
+
+def remove_subvolumegroup(module, container_image=None):
+    '''
+    Remove a subvolumegroup
+    '''
+
+    cluster = module.params.get('cluster')
+    name = module.params.get('name')
+    subvolumegroup = module.params.get('subvolumegroup')
+
+    args = ['rm', name, subvolumegroup]
+
+    cmd = generate_ceph_cmd(sub_cmd=['fs', 'subvolumegroup'],
+                            args=args,
+                            cluster=cluster,
+                            container_image=container_image)
+
+    return cmd
+
+
 def run_module():
     module_args = dict(
         cluster=dict(type='str', required=False, default='ceph'),
@@ -312,18 +408,26 @@ def run_module():
         data=dict(type='str', required=False),
         metadata=dict(type='str', required=False),
         max_mds=dict(type='int', required=False),
+        subvolumegroup=dict(type='str', required=False),
     )
 
     module = AnsibleModule(
         argument_spec=module_args,
         supports_check_mode=True,
-        required_if=[['state', 'present', ['data', 'metadata']]],
     )
 
     # Gather module parameters in variables
     name = module.params.get('name')
     state = module.params.get('state')
+    data = module.params.get('data')
+    metadata = module.params.get('metadata')
     max_mds = module.params.get('max_mds')
+    subvolumegroup = module.params.get('subvolumegroup')
+
+    # Validate required parameters for state=present when not using subvolumegroup  # noqa: E501
+    if state == 'present' and not subvolumegroup:
+        if not data or not metadata:
+            fatal("missing required arguments for filesystem creation: data, metadata", module)  # noqa: E501
 
     if module.check_mode:
         module.exit_json(
@@ -341,6 +445,24 @@ def run_module():
 
     # will return either the image name or None
     container_image = is_containerized()
+
+    if subvolumegroup:
+        rc, cmd, out, err = exec_command(module, list_subvolumegroups(module, container_image=container_image))  # noqa: E501
+        if rc == 0:
+            groups = [group['name'] for group in json.loads(out)]
+            if state == "present":
+                if subvolumegroup not in groups:
+                    rc, cmd, out, err = exec_command(module, create_subvolumegroup(module, container_image=container_image))  # noqa: E501
+                    if rc == 0:
+                        changed = True
+            elif state == "absent":
+                if subvolumegroup in groups:
+                    rc, cmd, out, err = exec_command(module, remove_subvolumegroup(module, container_image=container_image))  # noqa: E501
+                    if rc == 0:
+                        changed = True
+            elif state == "info":
+                out = json.dumps([group for group in json.loads(out) if group['name'] == subvolumegroup])  # noqa: E501
+        exit_module(module=module, out=out, rc=rc, cmd=cmd, err=err, startd=startd, changed=changed)  # noqa: E501
 
     if state == "present":
         rc, cmd, out, err = exec_command(module, get_fs(module, container_image=container_image))  # noqa: E501

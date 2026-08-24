@@ -42,4 +42,4 @@ ceph_mds_cephfs:
 
 # CephFS subvolume group to be created.
 ceph_mds_subvolumegroup:
-  - { vol_name: cephfs, group_name: csi }
+  - { name: cephfs, subvolumegroup: csi }

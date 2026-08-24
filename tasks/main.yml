@@ -103,8 +103,8 @@
   community.general.ini_file:
     section: "{{ item.section }}"
     option: "{{ item.option }}"
-    value: "{{ item.value }}"
     state: "{{ item.state }}"
+    value: "{{ item.value | default(omit) }}"
     path: /etc/ceph/ceph.conf
     mode: "0644"
   loop: "{{ ceph_mds_config }}"
@@ -128,6 +128,7 @@
     name: "{{ item.name }}"
     dest: "{{ item.dest }}"
     caps: "{{ item.caps | default(omit) }}"
+    key_type: "{{ item.key_type | default(omit) }}"
     owner: "{{ item.owner | default('ceph') }}"
     group: "{{ item.group | default('ceph') }}"
     mode: "{{ item.mode | default('0400') }}"
@@ -183,14 +184,10 @@
   failed_when: false
 
 - name: ceph fs subvolumegroup create
-  ansible.builtin.shell:
-    cmd: |
-      set -euxo pipefail
-      ceph fs subvolumegroup create \
-        {{ item.vol_name }} \
-        {{ item.group_name }}
-  args:
-    executable: /bin/bash
+  ceph_fs: # noqa fqcn[action]
+    name: "{{ item.name }}"
+    subvolumegroup: "{{ item.subvolumegroup }}"
+    state: present
   loop: "{{ ceph_mds_subvolumegroup }}"
   when: inventory_hostname == ansible_play_hosts[0]
   changed_when: false
